@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- 
 var app = {
     // Application Constructor
     initialize: function() {
@@ -34,50 +33,58 @@ var app = {
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
-		alert('device is ready now');
-       
-		window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
-		alert(LocalFileSystem);
-		window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, this.gotFS, this.fail);
-		 app.receivedEvent('deviceready');
-    },
-	
-	fail: function() {
-		alert("failed to get filesystem");
-    },
-	
-	gotFS: function(fileSystem) {
-		alert("got filesystem");
-	     //   alert(fileSystem.root.fullPath);
-    	    window.rootFS = fileSystem.root;
+        app.receivedEvent('deviceready');
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {
+        var parentElement = document.getElementById(id);
+        var listeningElement = parentElement.querySelector('.listening');
+        var receivedElement = parentElement.querySelector('.received');
+
+        listeningElement.setAttribute('style', 'display:none;');
+        receivedElement.setAttribute('style', 'display:block;');
+
+        console.log('Received Event: ' + id);
+		
+		
+		var pushNotification = window.plugins.pushNotification;
+		pushNotification.register(app.successHandler, app.errorHandler,{"senderID":"1082477431167","ecb":"app.onNotificationGCM"});
+		
     },
-	playAudio: function(src) {
-            // Create Media object from src
-            my_media = new Media(src, onSuccess, onError);
 
-            // Play audio
-            my_media.play();
+	// result contains any message sent from the plugin call
+	successHandler: function(result) {
+		alert('Callback Success! Result = '+result);
+	},
+	
+	errorHandler:function(error) {
+		alert(error);
+	},
+	
+	onNotificationGCM: function(e) {
+		switch( e.event )
+		{
+			case 'registered':
+				if ( e.regid.length > 0 )
+				{
+					console.log("Regid " + e.regid);
+					alert('registration id = '+e.regid);
+				}
+			break;
+ 
+			case 'message':
+			  // this is the actual push notification. its format depends on the data model from the push server
+			  alert('message = '+e.message+' msgcnt = '+e.msgcnt);
+			break;
+ 
+			case 'error':
+			  alert('GCM error = '+e.msg);
+			break;
+ 
+			default:
+			  alert('An unknown GCM event has occurred');
+			  break;
+		}
+	}
 
-            // Update my_media position every second
-            if (mediaTimer == null) {
-                mediaTimer = setInterval(function() {
-                    // get my_media position
-                    my_media.getCurrentPosition(
-                        // success callback
-                        function(position) {
-                            if (position > -1) {
-                                setAudioPosition((position) + " sec");
-                            }
-                        },
-                        // error callback
-                        function(e) {alert("Error getting pos=" + e);
-                            setAudioPosition("Error: " + e);
-                        }
-                    );
-                }, 1000);
-            }
-        }
 };
